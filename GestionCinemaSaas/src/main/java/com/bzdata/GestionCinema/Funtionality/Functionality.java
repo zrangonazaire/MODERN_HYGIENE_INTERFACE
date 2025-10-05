@@ -1,19 +1,14 @@
-package com.bzdata.GestionCinema.role;
+package com.bzdata.GestionCinema.Funtionality;
+
+import com.bzdata.GestionCinema.attributionDroit.Attribution;
 import com.bzdata.GestionCinema.rolefunctionality.RoleFunctionality;
-import com.bzdata.GestionCinema.user.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -22,24 +17,19 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "role")
 @EntityListeners(AuditingEntityListener.class)
-public class Role {
-
+public class Functionality {
     @Id
-    @GeneratedValue
-    private Integer id;
-    @Column(unique = true)
-    private String code;
-    @Column(unique = true)
-    private String name;
-    @ManyToMany(mappedBy = "roles")
-    @JsonIgnore
-    private List<User> user;
-    @OneToMany(mappedBy = "role")
-    @JsonIgnore
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int idFunctionality;
+    @Column(unique = true, nullable = false)
+    private String codeFunctionality;
+    private String nameFunctionality;
+    private String descriptionFunctionality;
+    @OneToMany(mappedBy = "functionality")
+    private Set<Attribution> attributions;
+    @OneToMany(mappedBy = "functionality")
     private Set<RoleFunctionality> roles;
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
@@ -47,4 +37,5 @@ public class Role {
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
+
 }

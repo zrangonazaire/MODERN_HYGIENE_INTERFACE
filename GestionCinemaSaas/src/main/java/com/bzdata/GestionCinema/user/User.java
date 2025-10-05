@@ -1,4 +1,5 @@
 package com.bzdata.GestionCinema.user;
+import com.bzdata.GestionCinema.attributionDroit.Attribution;
 import com.bzdata.GestionCinema.role.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static jakarta.persistence.FetchType.EAGER;
@@ -44,15 +46,16 @@ public class User  implements UserDetails, Principal {
     private String password;
     private boolean accountLocked;
     private boolean enabled;
-    @ManyToMany(fetch = EAGER)
-    private List<Role> roles;
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
-
+    @ManyToMany(fetch = EAGER)
+    private List<Role> roles;
+    @OneToMany(mappedBy = "user")
+    private Set<Attribution> attributions;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles
