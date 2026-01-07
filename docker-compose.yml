@@ -1,12 +1,12 @@
 services:
   postgres:
-    container_name: postgres-sql-cinema
+    container_name: postgres-sql-tata-fne
     image: postgres
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
       PGDATA: /var/lib/postgresql/data
-      POSTGRES_DB: cinema_saas
+      POSTGRES_DB: tata_fne_db
     volumes:
       - postgres:/data/postgres
     ports:
@@ -28,7 +28,7 @@ services:
 #      - spring-demo
 #    restart: unless-stopped
   mail-dev:
-    container_name: mail-dev-cinema
+    container_name: mail-dev-tata-fne
     image: maildev/maildev
     ports:
       - 1080:1080
