@@ -1,6 +1,7 @@
 package com.bzdata.TataFneBackend.FactureFneCerifier;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import lombok.Data;
 @Data
@@ -54,7 +55,7 @@ public class InvoiceFneCertify {
         private OffsetDateTime createdAt;
         private OffsetDateTime updatedAt;
 
-        // private List<Item> items;
+        private List<Item> items;
 
-        // private List<InvoiceCustomTax> customTaxes;
+        private List<InvoiceCertifierCustomTax> customTaxes;
 }
