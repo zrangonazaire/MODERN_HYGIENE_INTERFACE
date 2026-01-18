@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -44,3 +44,14 @@ application:
       photos-output-path: ./uploads
 server:
   port: 8089
+
+fne:
+  base-url: http://54.247.95.108/ws
+  sign-path: /external/invoices/sign
+  bearer-token: NZrZKVylaPzf2APARYi6bEYn40oXCNqE
+
+invoice:
+  api:
+    base-url: http://54.247.95.108
+    sign-path: /ws/external/invoices/sign
+    token: NZrZKVylaPzf2APARYi6bEYn40oXCNqE

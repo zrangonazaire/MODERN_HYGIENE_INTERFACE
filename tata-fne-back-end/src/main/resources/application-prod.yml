@@ -1,0 +1,4 @@
+fne:
+  env: PROD
+  base-url: https://api.fne.dgi.ci/ws
+  api-key: ${FNE_API_KEY_PROD}
