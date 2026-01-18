@@ -81,6 +81,10 @@
   align-items: center;
 }
 
+main {
+  min-height: 100vh;
+}
+
 @media (max-width: 900px) {
   .brand-row {
     grid-template-columns: 1fr;

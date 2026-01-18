@@ -1,16 +1,20 @@
 package com.bzdata.TataFneBackend.newCertificationWay;
 
-import org.springframework.http.MediaType;
+import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.RequiredArgsConstructor;
-
-
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/new-invoices")
@@ -27,7 +31,7 @@ public class InvoiceController {
     public void certifyFinal(@RequestBody InvoiceSignRequest request) {
         service.saveFromJsonToDataba(service.certifyInvoice(request));
     }
-    @PostMapping("/certify-final-facture/{numFacture}/{utilisateur}")
+    @PostMapping(value = "/certify-final-facture/{numFacture}/{utilisateur}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE) 
     public void certifyFinalWithNumFacture(@RequestBody InvoiceSignRequest request,@PathVariable("numFacture") String numFacture ,@PathVariable("utilisateur")  String utilisateur) {
         service.saveFromJsonToDatabaWithNumFacture(service.certifyInvoice(request),numFacture,utilisateur);
     }
@@ -37,7 +41,7 @@ public class InvoiceController {
     }
 
     // 2) LISTE toutes les factures: /api/invoices
-    @GetMapping
+    @GetMapping("/all-certified-invoices")
     public ResponseEntity<List<InvoiceFneCertifyDto>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }

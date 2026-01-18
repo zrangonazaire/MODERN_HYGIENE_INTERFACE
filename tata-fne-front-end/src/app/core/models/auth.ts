@@ -1,0 +1,21 @@
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegistrationRequest {
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface AuthenticationResponse {
+  token: string;
+}

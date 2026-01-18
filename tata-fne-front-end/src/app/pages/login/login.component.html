@@ -1,0 +1,73 @@
+<div class="login-page">
+  <section class="brand-panel">
+    <div class="brand-mark">
+      <img src="/logo.png" alt="Tata logo" />
+    </div>
+    <p class="brand-caption">Facture Normalisée Électronique</p>
+  </section>
+
+  <section class="form-panel">
+    <div class="form-card">
+      <div class="form-logo">
+        <img src="/logo.png" alt="Tata logo" />
+      </div>
+
+      <div class="headline">
+        <p class="eyebrow">Portail FNE</p>
+        <h1>Connectez-vous à votre compte</h1>
+        <p class="lede">Renseignez vos identifiants pour accéder à votre espace sécurisé.</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
+        <label class="field-label" for="email">Email *</label>
+        <div class="field" [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="exemple@domaine.com"
+            autocomplete="email"
+          />
+        </div>
+
+        <label class="field-label" for="password">Mot de passe *</label>
+        <div class="field password-field" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="••••••••••"
+            autocomplete="current-password"
+          />
+          <button type="button" class="toggle" (click)="togglePassword()">
+            {{ showPassword ? 'Masquer' : 'Afficher' }}
+          </button>
+        </div>
+
+        <div class="actions">
+          <label class="remember">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>Se souvenir de moi</span>
+          </label>
+          <a href="#" class="link">Mot de passe oublié ?</a>
+        </div>
+
+        <p class="hint">Les champs suivis d'un * sont obligatoires</p>
+
+        @if (errorMessage()) {
+          <div class="error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button class="primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Connexion...' : 'Connexion' }}
+        </button>
+
+        <p class="footnote">
+          Vous n'êtes pas encore inscrit ? <a href="#" class="link">Cliquez ici</a>
+        </p>
+      </form>
+    </div>
+  </section>
+</div>

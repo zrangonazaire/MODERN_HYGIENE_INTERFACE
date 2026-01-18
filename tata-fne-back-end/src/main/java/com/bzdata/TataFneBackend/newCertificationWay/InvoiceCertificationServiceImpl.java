@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class InvoiceCertificationServiceImpl implements InvoiceCertificationService {
 private final ObjectMapper objectMapper;
     private final InvoiceMainResponseRepository mainRepo;
@@ -29,6 +31,12 @@ private final ObjectMapper objectMapper;
     private final InvoiceCertifierCustomTaxRepository invoiceCustomTaxRepo;
     @Override
     public JsonNode certifyInvoice(InvoiceSignRequest request) {
+
+        try {
+            log.info("Calling FNE sign API with payload: {}", objectMapper.writeValueAsString(request));
+        } catch (Exception e) {
+            log.warn("Unable to serialize InvoiceSignRequest for logging", e);
+        }
 
         return invoiceWebClient.post()
                 .uri(props.getSignPath())
@@ -209,9 +217,6 @@ private final ObjectMapper objectMapper;
                     "La facture " + numFacture + " est déjà certifiée et ne peut plus être traitée."
             );
         }
-
-
-
         // ===== 1) MAIN RESPONSE =====
         InvoiceMainResponse main = new InvoiceMainResponse();
         main.setReference(text(json, "reference")); // PK
@@ -376,6 +381,7 @@ private final ObjectMapper objectMapper;
     }
     private InvoiceFneCertifyDto toDto(InvoiceFneCertify invoice) {
         InvoiceFneCertifyDto dto = new InvoiceFneCertifyDto();
+        InvoiceMainResponse mainResp = mainRepo.findByInvoice(invoice);
         dto.setId(invoice.getId());
         dto.setNumeroFactureInterne(invoice.getNumeroFacture());
         dto.setUtilisateurCreateur(invoice.getUtilisateurCreateur());
@@ -385,10 +391,8 @@ private final ObjectMapper objectMapper;
 
         dto.setTotalTTC(invoice.getTotalAfterTaxes());
         dto.setTotalHorsTaxes(invoice.getTotalBeforeTaxes());
-        dto.setTotalTaxes(invoice.getTotalTaxes());
-        dto.setToken(invoice.getToken());
-
-
+        dto.setTotalTaxes(invoice.getTotalTaxes());      
+        dto.setToken(mainResp.getToken());
         return dto;
     }
 

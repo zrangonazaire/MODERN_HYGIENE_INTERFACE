@@ -1,0 +1,145 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="/logo.png" alt="Logo" />
+      </div>
+      <div class="brand-caption">Facture Normalisée Électronique</div>
+    </div>
+
+    <nav class="menu">
+      <a class="menu-item" routerLink="/dashboard" routerLinkActive="active">
+        <span class="icon">D</span>
+        Tableau de bord
+      </a>
+      <a class="menu-item" routerLink="/factures-non-certifiees" routerLinkActive="active">
+        <span class="icon">X</span>
+        Certification par fichier Excel
+      </a>
+      <a class="menu-item">
+        <span class="icon">A</span>
+        Certification par API SAP
+      </a>
+      <a class="menu-item active">
+        <span class="icon">F</span>
+        Factures Certifiées
+      </a>
+      <a class="menu-item">
+        <span class="icon">P</span>
+        Paramètres
+      </a>
+    </nav>
+
+    <div class="logout">
+      <button type="button" (click)="logout()">Se déconnecter</button>
+      <small>v1.0.2 (04/11/2025)</small>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="breadcrumbs">Pages / Factures certifiées</div>
+      <div class="top-actions">
+        <a class="link">{{ userFullName() }}</a>
+        <a class="link">Notifications</a>
+      </div>
+    </header>
+
+    <section class="page-heading">
+      <p class="eyebrow">Factures certifiées</p>
+      <div class="heading-actions">
+        <input
+          type="search"
+          placeholder="Rechercher par numéro, référence ou token"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+        <select [ngModel]="creatorFilter()" (ngModelChange)="creatorFilter.set($event)">
+          <option [ngValue]="'all'">Tous les utilisateurs</option>
+          @for (creator of creators(); track $index) {
+            @if (creator !== 'all') {
+              <option [ngValue]="creator">{{ creator }}</option>
+            }
+          }
+        </select>
+        <button class="refresh" type="button" (click)="load()">Rafraîchir</button>
+      </div>
+    </section>
+
+    @if (error()) {
+      <div class="alert error">
+        {{ error() }}
+        <button type="button" (click)="load()">Réessayer</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="loading">Chargement des factures certifiées...</div>
+    } @else {
+      <section class="summary">
+        <div class="summary-card">
+          <p>Total factures</p>
+          <h2>{{ totals().count }}</h2>
+        </div>
+        <div class="summary-card">
+          <p>Total TTC</p>
+          <h2>{{ formatMoney(totals().ttc) }}</h2>
+        </div>
+        <div class="summary-card">
+          <p>Total HT</p>
+          <h2>{{ formatMoney(totals().ht) }}</h2>
+        </div>
+        <div class="summary-card">
+          <p>Total Taxes</p>
+          <h2>{{ formatMoney(totals().taxes) }}</h2>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Numéro interne</th>
+                <th>Référence</th>
+                <th>Utilisateur</th>
+                <th>Date</th>
+                <th>Total HT</th>
+                <th>Total Taxes</th>
+                <th>Total TTC</th>
+                <th>Token</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (invoice of filtered(); track trackById($index, invoice)) {
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ invoice.numeroFactureInterne || '-' }}</div>
+                    <small class="muted">ID: {{ invoice.id }}</small>
+                  </td>
+                  <td>{{ invoice.reference || '-' }}</td>
+                  <td>{{ invoice.utilisateurCreateur || '-' }}</td>
+                  <td>{{ formatDate(invoice.date) }}</td>
+                  <td>{{ formatMoney(invoice.totalHorsTaxes) }}</td>
+                  <td>{{ formatMoney(invoice.totalTaxes) }}</td>
+                  <td>{{ formatMoney(invoice.totalTTC) }}</td>
+                  <td class="token">
+                    @if (invoice.token) {
+                      <a class="token-link" [href]="invoice.token" target="_blank" rel="noreferrer noopener">{{ invoice.token }}</a>
+                    } @else {
+                      -
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="empty">Aucune facture certifiée trouvée.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  </div>
+</div>

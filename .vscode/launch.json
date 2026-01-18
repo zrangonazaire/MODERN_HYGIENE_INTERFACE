@@ -9,6 +9,13 @@
             "name": "TataFneBackendApplication",
             "request": "launch",
             "mainClass": "com.bzdata.TataFneBackend.TataFneBackendApplication",
+            "projectName": "GestionCinemaSaas"
+        },
+        {
+            "type": "java",
+            "name": "TataFneBackendApplication",
+            "request": "launch",
+            "mainClass": "com.bzdata.TataFneBackend.TataFneBackendApplication",
             "projectName": "TATA_FNE"
         },
         {

@@ -1,19 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { FneExcelService } from '../../core/services/fne-excel.service';
 import { ExcelReadResult } from '../../core/models/excel-read-result';
 import { FneInvoiceService } from '../../core/services/fne-invoice.service';
 import { NonCertifiedInvoice } from '../../core/models/non-certified-invoice';
+import { AuthenticationService } from '../../core/services/authentication.service';
+import { InvoiceSignRequest } from '../../core/models/invoice-sign-request';
 
 type InvoiceStatus = 'a_certifier' | 'en_attente' | 'rejete' | 'certifie' | 'inconnu';
 
 @Component({
   selector: 'app-factures-non-certifiees',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './factures-non-certifiees.component.html',
   styleUrl: './factures-non-certifiees.component.scss'
 })
@@ -33,12 +36,18 @@ export class FacturesNonCertifieesComponent {
   readonly certifyState = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly certifyError = signal<string | null>(null);
   readonly certifyCount = signal<number>(0);
+  readonly certifyingId = signal<number | null>(null);
+  readonly actionError = signal<string | null>(null);
+  readonly userFullName = signal('Compte');
 
   constructor(
     private readonly excelService: FneExcelService,
-    private readonly invoiceService: FneInvoiceService
+    private readonly invoiceService: FneInvoiceService,
+    private readonly authService: AuthenticationService,
+    private readonly router: Router
   ) {
     this.loadInvoices();
+    this.userFullName.set(this.authService.getCurrentFullName() ?? 'Compte');
   }
 
   readonly filteredInvoices = computed(() => {
@@ -69,9 +78,7 @@ export class FacturesNonCertifieesComponent {
   readonly selectedApiCount = computed(() =>
     this.invoices().filter((invoice) => this.selected().has(invoice.id) && invoice.source !== 'excel').length
   );
-  readonly apiInvoicesCount = computed(
-    () => this.invoices().filter((invoice) => invoice.source !== 'excel').length
-  );
+  readonly apiInvoicesCount = computed(() => this.invoices().filter((invoice) => invoice.source !== 'excel').length);
 
   toggleSelection(invoiceId: number): void {
     const next = new Set(this.selected());
@@ -203,6 +210,87 @@ export class FacturesNonCertifieesComponent {
     });
   }
 
+  certifyOne(invoice: NonCertifiedInvoice): void {
+    this.actionError.set(null);
+    const utilisateur = this.authService.getCurrentFullName() ?? 'non defini';
+    const numFacture = invoice.invoiceNumber;
+    if (!numFacture) {
+      this.actionError.set('Référence de facture manquante.');
+      return;
+    }
+
+    const payload = this.buildSignRequest(invoice);
+
+    // Log payload sent to backend for traceability
+    console.log('Certifier FNE payload', { numFacture, utilisateur, payload });
+
+    this.certifyingId.set(invoice.id);
+    this.invoiceService.certifyFinalFacture(numFacture, utilisateur, payload).subscribe({
+      next: () => {
+        this.certifyingId.set(null);
+        this.loadInvoices();
+      },
+      error: (error: unknown) => {
+        const message = error instanceof Error ? error.message : 'Certification impossible.';
+        this.actionError.set(message);
+        this.certifyingId.set(null);
+      }
+    });
+  }
+
+  private buildSignRequest(invoice: NonCertifiedInvoice): InvoiceSignRequest {
+    const amount = this.toNumber(invoice.prixUnitaireHT);
+    const quantity = this.toNumber(invoice.quantite);
+    const discount = this.toNumber(invoice.remise);
+    const paymentMethod = this.normalizePaymentMethod(invoice.modePaiement || invoice.paymentMethod);
+
+    return {
+      invoiceType: invoice.typeClient || invoice.invoiceType || 'sale',
+      paymentMethod: paymentMethod,
+      template: 'B2B',
+      numeroFacture: invoice.invoiceNumber,
+      clientNcc: invoice.clientNcc || undefined,
+      clientCompanyName: invoice.clientCompanyName || invoice.nomClient || undefined,
+      clientPhone: invoice.telephoneClient || undefined,
+      clientEmail: invoice.emailClient || undefined,
+      pointOfSale: 'PDV_TATA_AFRICA_CI',
+      establishment: 'TATA AFRICA CI',
+      commercialMessage: invoice.commentaire || undefined,
+      items: [
+        {
+          taxes: invoice.codeTaxe ? [invoice.codeTaxe] : undefined,
+          description: invoice.designation || invoice.refArticle || undefined,
+          quantity: quantity ?? undefined,
+          amount: amount ?? undefined
+        }
+      ],
+      discount: discount ?? undefined
+    };
+  }
+
+  private toNumber(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined) return null;
+    const num = typeof value === 'number' ? value : Number((value as string).replace(',', '.'));
+    return Number.isNaN(num) ? null : num;
+  }
+
+  private normalizePaymentMethod(value?: string | null): string {
+    if (!value) return 'card';
+    const v = value.toLowerCase().trim();
+    if (v.includes('virement')) return 'transfer';
+    if (v.includes('carte')) return 'card';
+    if (v.includes('espe') || v.includes('espèce') || v.includes('espece')) return 'cash';
+    if (v.includes('mobile')) return 'mobile-money';
+    if (v.includes('cheque') || v.includes('chèque')) return 'check';
+    if (v.includes('terme')) return 'deferred';
+    return 'card';
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
   normalizeStatus(invoice: NonCertifiedInvoice): InvoiceStatus {
     const raw = invoice.factureCertifStatus?.toLowerCase().trim() ?? '';
     if (!raw) return 'inconnu';
@@ -221,20 +309,55 @@ export class FacturesNonCertifieesComponent {
       const paymentMethod = this.getFirstValue(normalized, this.paymentMethodKeys);
       const clientNcc = this.getFirstValue(normalized, this.clientNccKeys);
       const clientCompanyName = this.getFirstValue(normalized, this.clientCompanyNameKeys);
+      const clientNameAlt = this.getFirstValue(normalized, this.clientNameKeys);
       const status = this.getFirstValue(normalized, this.statusKeys);
       const invoiceDate = this.getFirstValue(normalized, this.invoiceDateKeys);
+
+      const typeClient = this.getFirstValue(normalized, this.typeClientKeys);
+      const codeClient = this.getFirstValue(normalized, this.codeClientKeys);
+      const telephoneClient = this.getFirstValue(normalized, this.telephoneClientKeys);
+      const emailClient = this.getFirstValue(normalized, this.emailClientKeys);
+      const refArticle = this.getFirstValue(normalized, this.refArticleKeys);
+      const designation = this.getFirstValue(normalized, this.designationKeys);
+      const quantite = this.getFirstValue(normalized, this.quantiteKeys);
+      const prixUnitaireHT = this.getFirstValue(normalized, this.prixUnitaireHTKeys);
+      const codeTaxe = this.getFirstValue(normalized, this.codeTaxeKeys);
+      const unite = this.getFirstValue(normalized, this.uniteKeys);
+      const remise = this.getFirstValue(normalized, this.remiseKeys);
+      const modePaiement = this.getFirstValue(normalized, this.modePaiementKeys);
+      const devise = this.getFirstValue(normalized, this.deviseKeys);
+      const tauxChange = this.getFirstValue(normalized, this.tauxChangeKeys);
+      const commentaire = this.getFirstValue(normalized, this.commentaireKeys);
+      const clientSellerName = this.getFirstValue(normalized, this.clientSellerNameKeys);
 
       return {
         id: index + 1,
         invoiceNumber: invoiceNumber ?? '',
         invoiceDate: invoiceDate ?? null,
-        clientCompanyName: clientCompanyName ?? null,
+        clientCompanyName: clientCompanyName ?? clientNameAlt ?? null,
         clientNcc: clientNcc ?? null,
         invoiceType: invoiceType ?? null,
         paymentMethod: paymentMethod ?? null,
         factureCertifStatus: status ?? 'En attente',
         dateDeModification: null,
-        source: 'excel'
+        source: 'excel',
+        typeClient: typeClient ?? null,
+        codeClient: codeClient ?? null,
+        nomClient: clientNameAlt ?? null,
+        telephoneClient: telephoneClient ?? null,
+        emailClient: emailClient ?? null,
+        refArticle: refArticle ?? null,
+        designation: designation ?? null,
+        quantite: quantite ?? null,
+        prixUnitaireHT: prixUnitaireHT ?? null,
+        codeTaxe: codeTaxe ?? null,
+        unite: unite ?? null,
+        remise: remise ?? null,
+        modePaiement: modePaiement ?? null,
+        devise: devise ?? null,
+        tauxChange: tauxChange ?? null,
+        commentaire: commentaire ?? null,
+        clientSellerName: clientSellerName ?? null
       };
     });
   }
@@ -268,25 +391,28 @@ export class FacturesNonCertifieesComponent {
     return null;
   }
 
-  private readonly invoiceNumberKeys = [
-    'invoicenumber',
-    'invoiceid',
-    'numerofacture',
-    'numfacture',
-    'numfact',
-    'facturenumber'
-  ];
+  private readonly invoiceNumberKeys = ['invoicenumber', 'invoiceid', 'numerofacture', 'numfacture', 'numfact', 'facturenumber'];
   private readonly invoiceTypeKeys = ['typeclient', 'invoicetype', 'typefacture', 'type'];
   private readonly paymentMethodKeys = ['paymentmethod', 'modepaiement', 'moyenpaiement', 'paiement'];
   private readonly clientNccKeys = ['clientncc', 'ncc', 'clientnif', 'nif', 'nccclient'];
-  private readonly clientCompanyNameKeys = [
-    'clientcompanyname',
-    'clientcompagnyname',
-    'client',
-    'raisonsociale',
-    'societe',
-    'nomclient'
-  ];
+  private readonly clientCompanyNameKeys = ['clientcompanyname', 'clientcompagnyname', 'client', 'raisonsociale', 'societe', 'nomclient'];
+  private readonly clientNameKeys = ['nomclient'];
   private readonly statusKeys = ['facturecertifstatus', 'statuscertification', 'statut', 'status'];
   private readonly invoiceDateKeys = ['invoicedate', 'datefacture', 'date'];
+  private readonly typeClientKeys = ['typeclient'];
+  private readonly codeClientKeys = ['codeclient'];
+  private readonly telephoneClientKeys = ['telephoneclient', 'telclient', 'phoneclient'];
+  private readonly emailClientKeys = ['emailclient', 'mailclient'];
+  private readonly refArticleKeys = ['refarticle', 'referencearticle', 'article'];
+  private readonly designationKeys = ['designation', 'designationarticle'];
+  private readonly quantiteKeys = ['quantite', 'qty', 'quantity'];
+  private readonly prixUnitaireHTKeys = ['prixunitaireht', 'puht', 'prixunitaire'];
+  private readonly codeTaxeKeys = ['codetaxe', 'taxe', 'taxcode'];
+  private readonly uniteKeys = ['unite', 'unit'];
+  private readonly remiseKeys = ['remise', 'discount'];
+  private readonly modePaiementKeys = ['modepaiement', 'paymentmethod', 'paiement'];
+  private readonly deviseKeys = ['devise', 'currency'];
+  private readonly tauxChangeKeys = ['tauxchange', 'changerate'];
+  private readonly commentaireKeys = ['commentaire', 'comment', 'note'];
+  private readonly clientSellerNameKeys = ['clientsellername', 'vendeurclient', 'seller'];
 }

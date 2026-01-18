@@ -1,0 +1,139 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="/logo.png" alt="Logo" />
+      </div>
+      <div class="brand-caption">Facture Normalisée Électronique</div>
+    </div>
+
+    <nav class="menu">
+      <a class="menu-item" routerLink="/dashboard" routerLinkActive="active">
+        <span class="icon">D</span>
+        Tableau de bord
+      </a>
+      <a class="menu-item" routerLink="/factures-non-certifiees" routerLinkActive="active">
+        <span class="icon">X</span>
+        Certification par fichier Excel
+      </a>
+      <a class="menu-item">
+        <span class="icon">A</span>
+        Certification par API SAP
+      </a>
+      <a class="menu-item" routerLink="/factures-certifiees" routerLinkActive="active">
+        <span class="icon">F</span>
+        Factures Certifiées
+      </a>
+      <a class="menu-item">
+        <span class="icon">P</span>
+        Paramètres
+      </a>
+    </nav>
+
+    <div class="logout">
+      <button type="button" (click)="logout()">Se déconnecter</button>
+      <small>v1.0.2 (04/11/2025)</small>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="breadcrumbs">Pages / Tableau De Bord</div>
+      <div class="top-actions">
+        <a class="link">{{ userFullName() }}</a>
+        <a class="link">Notifications</a>
+      </div>
+    </header>
+
+    <section class="page-heading">
+      <p class="eyebrow">Entreprise - Facture Normalisée Électronique (FNE)</p>
+    </section>
+
+    <section class="company-card">
+      <div class="company-name">Tata Africa CI SARL</div>
+      <div class="company-grid">
+        <div><span>Régime d'imposition :</span> RNI</div>
+        <div><span>Secteur d'activité :</span> Commerce de véhicules automobiles neufs</div>
+        <div><span>IDU :</span> CI20120000178D</div>
+        <div><span>NCC :</span> 1218049R</div>
+        <div><span>Direction de rattachement :</span> DRAS II</div>
+        <div><span>Centre d'impôts / Poste comptable :</span> 809 Impôts de Marcory I</div>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="pill">14 derniers jours</div>
+      <div class="pill">Etablissements: Tous</div>
+      <div class="pill">Client NCC: Tous</div>
+    </section>
+
+    <section class="cards-grid">
+      <div class="card">
+        <p class="card-title">Factures et reçus réceptionnés</p>
+        <div class="card-value">9</div>
+      </div>
+      <div class="card">
+        <p class="card-title">Factures et reçus émis</p>
+        <div class="card-value">0</div>
+      </div>
+    </section>
+
+    <section class="cards-grid large">
+      <div class="card">
+        <div class="card-title">Factures de vente</div>
+        <div class="card-value">0</div>
+        <div class="meta">Quantité</div>
+        <div class="meta">Montant</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Factures d'avoir</div>
+        <div class="card-value">0</div>
+        <div class="meta">Quantité</div>
+        <div class="meta">Montant</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Proforma</div>
+        <div class="card-value">0</div>
+        <div class="meta">Quantité</div>
+        <div class="meta">Montant</div>
+      </div>
+    </section>
+
+    <section class="cards-grid large">
+      <div class="card">
+        <div class="card-title">Bordereaux d'achat de produits agricoles</div>
+        <div class="card-value">0</div>
+        <div class="meta">Quantité</div>
+        <div class="meta">Montant</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Factures total HT</div>
+        <div class="card-value">0</div>
+        <div class="meta">CFA</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Factures total VAT</div>
+        <div class="card-value">0</div>
+        <div class="meta">CFA</div>
+      </div>
+    </section>
+
+    <section class="cards-grid large">
+      <div class="card">
+        <div class="card-title">Factures total autres taxes</div>
+        <div class="card-value">0</div>
+        <div class="meta">CFA</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Factures total remises</div>
+        <div class="card-value">0</div>
+        <div class="meta">CFA</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Factures total TTC</div>
+        <div class="card-value">0</div>
+        <div class="meta">CFA</div>
+      </div>
+    </section>
+  </div>
+</div>
