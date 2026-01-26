@@ -1,10 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet, RouterModule } from '@angular/router';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -27,7 +27,8 @@ export class App {
       url.startsWith('/login') ||
       url.startsWith('/dashboard') ||
       url.startsWith('/factures-certifiees') ||
-      url.startsWith('/factures-non-certifiees')
+      url.startsWith('/factures-non-certifiees') ||
+      url.startsWith('/parametres')
     );
   }
 }

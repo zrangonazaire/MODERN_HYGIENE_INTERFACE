@@ -1,0 +1,19 @@
+{
+  "raisonSociale": "Tech Solutions Inc.",
+  "sigle": "TSI",
+  "formeJuridique": "SARL",
+  "objetSocial": "Développement de solutions technologiques innovantes",
+  "numeroRccm": "RCCM-CI-ABJ-2023-A-12345",
+  "numeroIfu": "IFU123456789",
+  "capitalSocial": 1000000.0,
+  "siegeSocial": "Immeuble Tech Plaza, Plateau",
+  "pays": "Côte d'Ivoire",
+  "ville": "Abidjan",
+  "adresse": "01 BP 1234 Abidjan 01",
+  "telephone": "+225 01 23 45 67 89",
+  "email": "contact@techsolutions.ci",
+  "siteWeb": "https://www.techsolutions.ci",
+  "dirigeantPrincipal": "Jean Dupont",
+  "exerciceComptableDebut": "2023-01-01",
+  "exerciceComptableFin": "2023-12-31"
+}

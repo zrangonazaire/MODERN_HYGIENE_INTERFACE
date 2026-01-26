@@ -3,6 +3,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { FacturesNonCertifieesComponent } from './pages/factures-non-certifiees/factures-non-certifiees.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { CertifiedInvoicesComponent } from './pages/certified-invoices/certified-invoices.component';
+import { ParametresComponent } from './pages/parametres/parametres.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
   {
     path: 'factures-non-certifiees',
     component: FacturesNonCertifieesComponent
+  },
+  {
+    path: 'parametres',
+    component: ParametresComponent
   },
   {
     path: '**',

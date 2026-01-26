@@ -1,0 +1,890 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="/logo.png" alt="Logo" />
+      </div>
+      <div class="brand-caption">Facture Normalisée Électronique</div>
+    </div>
+
+    <nav class="menu">
+      <a class="menu-item" routerLink="/dashboard" routerLinkActive="active">
+        <span class="icon">D</span>
+        Tableau de bord
+      </a>
+      <a class="menu-item" routerLink="/factures-non-certifiees" routerLinkActive="active">
+        <span class="icon">X</span>
+        Certification par fichier Excel
+      </a>
+      <a class="menu-item">
+        <span class="icon">A</span>
+        Certification par API SAP
+      </a>
+      <a class="menu-item" routerLink="/factures-certifiees" routerLinkActive="active">
+        <span class="icon">F</span>
+        Factures Certifiées
+      </a>
+      <a class="menu-item" routerLink="/parametres" routerLinkActive="active">
+        <span class="icon">P</span>
+        Paramètres
+      </a>
+    </nav>
+
+    <div class="logout">
+      <button type="button" (click)="logout()">Se déconnecter</button>
+      <small>v1.0.2 (04/11/2025)</small>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="breadcrumbs">Pages / Paramètres</div>
+      <div class="top-actions">
+        <a class="link">{{ userFullName() }}</a>
+        <a class="link">Notifications</a>
+      </div>
+    </header>
+
+    <section class="page-heading">
+      <p class="eyebrow">Gestion des Paramètres Système</p>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="api-tabs">
+      <button class="tab-button" [class.active]="activeTab() === 'departments'" (click)="setActiveTab('departments')">
+        Gestion des Départements
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'roles'" (click)="setActiveTab('roles')">
+        Gestion des Rôles
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'functionalities'" (click)="setActiveTab('functionalities')">
+        Fonctionnalités
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'etablissements'" (click)="setActiveTab('etablissements')">
+        Établissements
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'societies'" (click)="setActiveTab('societies')">
+        Sociétés
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'attributions'" (click)="setActiveTab('attributions')">
+        Attributions
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'users'" (click)="setActiveTab('users')">
+        Gestion des Utilisateurs
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Chargement des données...</p>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="alert error">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Success Message -->
+    @if (success()) {
+      <div class="alert success">
+        {{ success() }}
+      </div>
+    }
+
+    <!-- Departments Management Tab -->
+    @if (activeTab() === 'departments') {
+      <div class="api-section">
+        <h3>Gestion des Départements</h3>
+
+        <!-- Create Department Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer un Nouveau Département</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createDepartment()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="deptCode">Code du Département</label>
+                  <input type="text" id="deptCode" [(ngModel)]="newDepartment().code" name="code" required
+                         class="form-control" placeholder="Ex: RH">
+                </div>
+                <div class="form-group">
+                  <label for="deptName">Nom du Département</label>
+                  <input type="text" id="deptName" [(ngModel)]="newDepartment().nom" name="nom" required
+                         class="form-control" placeholder="Ex: Ressources Humaines">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="deptEtablissement">Établissement</label>
+                <select id="deptEtablissement" [(ngModel)]="newDepartment().idEtablissement" name="idEtablissement" required
+                        class="form-control">
+                  <option value="" disabled>Sélectionnez un établissement</option>
+                  @for (etab of etablissements(); track etab.id) {
+                    <option [value]="etab.id">{{ etab.nom }} ({{ etab.codeEtablissement }})</option>
+                  }
+                </select>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading() || !newDepartment().idEtablissement">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Département
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Departments List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Départements ({{ departments().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (departments().length === 0) {
+              <p class="empty-state">Aucun département trouvé. Créez votre premier département.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Code</th>
+                      <th>Nom</th>
+                      <th>Établissement</th>
+                      <th>Code Établissement</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (dept of departments(); track dept.id) {
+                      <tr>
+                        <td>{{ dept.id }}</td>
+                        <td>{{ dept.code }}</td>
+                        <td>{{ dept.nom }}</td>
+                        <td>{{ dept.libelleEtablissement }}</td>
+                        <td>{{ dept.codeEtablissement }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Roles Management Tab -->
+    @if (activeTab() === 'roles') {
+      <div class="api-section">
+        <h3>Gestion des Rôles</h3>
+
+        <!-- Create Role Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer un Nouveau Rôle</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createRole()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="roleCode">Code du Rôle</label>
+                  <input type="text" id="roleCode" [(ngModel)]="newRole().code" name="code" required
+                         class="form-control" placeholder="Ex: ADMIN">
+                </div>
+                <div class="form-group">
+                  <label for="roleName">Nom du Rôle</label>
+                  <input type="text" id="roleName" [(ngModel)]="newRole().nom" name="nom" required
+                         class="form-control" placeholder="Ex: Administrateur">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Rôle
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Roles List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Rôles ({{ roles().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (roles().length === 0) {
+              <p class="empty-state">Aucun rôle trouvé. Créez votre premier rôle.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Code</th>
+                      <th>Nom</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (role of roles(); track role.id) {
+                      <tr>
+                        <td>{{ role.id }}</td>
+                        <td>{{ role.code }}</td>
+                        <td>{{ role.nom }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Functionalities Management Tab -->
+    @if (activeTab() === 'functionalities') {
+      <div class="api-section">
+        <h3>Gestion des Fonctionnalités</h3>
+
+        <!-- Create Functionality Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer une Nouvelle Fonctionnalité</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createFunctionality()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="funcName">Nom</label>
+                  <input type="text" id="funcName" [(ngModel)]="newFunctionality().nom" name="nom" required
+                         class="form-control" placeholder="Ex: Gestion des utilisateurs">
+                </div>
+                <div class="form-group">
+                  <label for="funcCode">Code</label>
+                  <input type="text" id="funcCode" [(ngModel)]="newFunctionality().code" name="code" required
+                         class="form-control" placeholder="Ex: USER_MANAGEMENT">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="funcDescription">Description</label>
+                <textarea id="funcDescription" [(ngModel)]="newFunctionality().description" name="description"
+                          class="form-control" rows="3" placeholder="Description de la fonctionnalité"></textarea>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Fonctionnalité
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Functionalities List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Fonctionnalités ({{ functionalities().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (functionalities().length === 0) {
+              <p class="empty-state">Aucune fonctionnalité trouvée.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nom</th>
+                      <th>Code</th>
+                      <th>Description</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (func of functionalities(); track func.id) {
+                      <tr>
+                        <td>{{ func.id }}</td>
+                        <td>{{ func.nom }}</td>
+                        <td>{{ func.code }}</td>
+                        <td>{{ func.description }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Etablissements Management Tab -->
+    @if (activeTab() === 'etablissements') {
+      <div class="api-section">
+        <h3>Gestion des Établissements</h3>
+
+        <!-- Create Etablissement Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer un Nouveau Établissement</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createEtablissement()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="etabNom">Nom</label>
+                  <input type="text" id="etabNom" [(ngModel)]="newEtablissement().nom" name="nom" required
+                         class="form-control" placeholder="Nom de l'établissement">
+                </div>
+                <div class="form-group">
+                  <label for="etabCode">Code Établissement</label>
+                  <input type="text" id="etabCode" [(ngModel)]="newEtablissement().codeEtablissement" name="codeEtablissement" required
+                         class="form-control" placeholder="Code de l'établissement">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="etabType">Type Établissement</label>
+                  <input type="text" id="etabType" [(ngModel)]="newEtablissement().typeEtablissement" name="typeEtablissement" required
+                         class="form-control" placeholder="Type de l'établissement">
+                </div>
+                <div class="form-group">
+                  <label for="etabPhone">Téléphone</label>
+                  <input type="text" id="etabPhone" [(ngModel)]="newEtablissement().telephone" name="telephone"
+                         class="form-control" placeholder="Téléphone">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="etabEmail">Email</label>
+                <input type="email" id="etabEmail" [(ngModel)]="newEtablissement().email" name="email"
+                       class="form-control" placeholder="Email">
+              </div>
+              <div class="form-group">
+                <label for="etabSociety">Société</label>
+                <select id="etabSociety" [(ngModel)]="newEtablissement().idSociete" name="idSociete" required
+                        class="form-control">
+                  <option value="" disabled>Sélectionnez une société</option>
+                  @for (society of societies(); track society.id) {
+                    <option [value]="society.id">{{ society.raisonSociale }} ({{ society.sigle }})</option>
+                  }
+                </select>
+              </div>
+                <div class="form-group">
+                  <label for="etabVille">Ville</label>
+                  <input type="text" id="etabVille" [(ngModel)]="newEtablissement().ville" name="ville" required
+                         class="form-control" placeholder="Ville">
+                </div>
+
+                <div class="form-group">
+                  <label for="etabAdresse">Adresse</label>
+                  <textarea id="etabAdresse" [(ngModel)]="newEtablissement().adresse" name="adresse"
+                            class="form-control" rows="2" placeholder="Adresse complète"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="etabResponsable">Responsable</label>
+                  <input type="text" id="etabResponsable" [(ngModel)]="newEtablissement().responsable" name="responsable"
+                         class="form-control" placeholder="Nom du responsable">
+                </div>
+
+                <div class="form-group">
+                  <label for="etabDateOuverture">Date d'Ouverture</label>
+                  <input type="date" id="etabDateOuverture" [(ngModel)]="newEtablissement().dateOuverture" name="dateOuverture"
+                         class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label for="etabActivite">Activité Principale</label>
+                  <input type="text" id="etabActivite" [(ngModel)]="newEtablissement().activitePrincipale" name="activitePrincipale"
+                         class="form-control" placeholder="Activité principale">
+                </div>
+              <button type="submit" class="btn-primary" [disabled]="loading() || !newEtablissement().idSociete">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Établissement
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Etablissements List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Établissements ({{ etablissements().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (etablissements().length === 0) {
+              <p class="empty-state">Aucun établissement trouvé.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nom</th>
+                      <th>Code Établissement</th>
+                      <th>Type Établissement</th>
+                      <th>Téléphone</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (etab of etablissements(); track etab.id) {
+                      <tr>
+                        <td>{{ etab.id }}</td>
+                        <td>{{ etab.nom }}</td>
+                        <td>{{ etab.codeEtablissement }}</td>
+                        <td>{{ etab.typeEtablissement }}</td>
+                        <td>{{ etab.telephone }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Societies Management Tab -->
+    @if (activeTab() === 'societies') {
+      <div class="api-section">
+        <h3>Gestion des Sociétés</h3>
+
+        <!-- Create Society Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer une Nouvelle Société</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createSociety()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="raisonSociale">Raison Sociale *</label>
+                  <input type="text" id="raisonSociale" [(ngModel)]="newSociety().raisonSociale" name="raisonSociale" required
+                         class="form-control" placeholder="Nom complet de la société">
+                </div>
+                <div class="form-group">
+                  <label for="sigle">Sigle *</label>
+                  <input type="text" id="sigle" [(ngModel)]="newSociety().sigle" name="sigle" required
+                         class="form-control" placeholder="Sigle de la société">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="formeJuridique">Forme Juridique *</label>
+                  <input type="text" id="formeJuridique" [(ngModel)]="newSociety().formeJuridique" name="formeJuridique" required
+                         class="form-control" placeholder="Ex: SARL, SA, SAS">
+                </div>
+                <div class="form-group">
+                  <label for="numeroRccm">Numéro RCCM *</label>
+                  <input type="text" id="numeroRccm" [(ngModel)]="newSociety().numeroRccm" name="numeroRccm" required
+                         class="form-control" placeholder="Numéro RCCM">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="numeroIfu">Numéro IFU *</label>
+                  <input type="text" id="numeroIfu" [(ngModel)]="newSociety().numeroIfu" name="numeroIfu" required
+                         class="form-control" placeholder="Numéro IFU">
+                </div>
+                <div class="form-group">
+                  <label for="capitalSocial">Capital Social *</label>
+                  <input type="number" id="capitalSocial" [(ngModel)]="newSociety().capitalSocial" name="capitalSocial" required
+                         class="form-control" placeholder="Capital social" step="0.1" min="0">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="siegeSocial">Siège Social *</label>
+                  <input type="text" id="siegeSocial" [(ngModel)]="newSociety().siegeSocial" name="siegeSocial" required
+                         class="form-control" placeholder="Siège social">
+                </div>
+                <div class="form-group">
+                  <label for="pays">Pays *</label>
+                  <input type="text" id="pays" [(ngModel)]="newSociety().pays" name="pays" required
+                         class="form-control" placeholder="Pays">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="ville">Ville *</label>
+                  <input type="text" id="ville" [(ngModel)]="newSociety().ville" name="ville" required
+                         class="form-control" placeholder="Ville">
+                </div>
+                <div class="form-group">
+                  <label for="telephone">Téléphone *</label>
+                  <input type="text" id="telephone" [(ngModel)]="newSociety().telephone" name="telephone" required
+                         class="form-control" placeholder="Téléphone">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" [(ngModel)]="newSociety().email" name="email" required
+                       class="form-control" placeholder="Email">
+              </div>
+
+              <div class="form-group">
+                <label for="siteWeb">Site Web</label>
+                <input type="url" id="siteWeb" [(ngModel)]="newSociety().siteWeb" name="siteWeb"
+                       class="form-control" placeholder="https://www.example.com">
+              </div>
+
+              <div class="form-group">
+                <label for="dirigeantPrincipal">Dirigeant Principal *</label>
+                <input type="text" id="dirigeantPrincipal" [(ngModel)]="newSociety().dirigeantPrincipal" name="dirigeantPrincipal" required
+                       class="form-control" placeholder="Nom du dirigeant principal">
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="exerciceComptableDebut">Exercice Comptable Début *</label>
+                  <input type="date" id="exerciceComptableDebut" [(ngModel)]="newSociety().exerciceComptableDebut" name="exerciceComptableDebut" required
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="exerciceComptableFin">Exercice Comptable Fin *</label>
+                  <input type="date" id="exerciceComptableFin" [(ngModel)]="newSociety().exerciceComptableFin" name="exerciceComptableFin" required
+                         class="form-control">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="objetSocial">Objet Social *</label>
+                <textarea id="objetSocial" [(ngModel)]="newSociety().objetSocial" name="objetSocial" required
+                          class="form-control" rows="3" placeholder="Description de l'objet social"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="adresse">Adresse Complète *</label>
+                <textarea id="adresse" [(ngModel)]="newSociety().adresse" name="adresse" required
+                          class="form-control" rows="3" placeholder="Adresse complète"></textarea>
+              </div>
+
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Société
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Societies List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Sociétés ({{ societies().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (societies().length === 0) {
+              <p class="empty-state">Aucune société trouvée.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Raison Sociale</th>
+                      <th>Sigle</th>
+                      <th>Forme Juridique</th>
+                      <th>Numéro RCCM</th>
+                      <th>Téléphone</th>
+                      <th>Email</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (soc of societies(); track soc.id) {
+                      <tr>
+                        <td>{{ soc.id }}</td>
+                        <td>{{ soc.raisonSociale }}</td>
+                        <td>{{ soc.sigle }}</td>
+                        <td>{{ soc.formeJuridique }}</td>
+                        <td>{{ soc.numeroRccm }}</td>
+                        <td>{{ soc.telephone }}</td>
+                        <td>{{ soc.email }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination Controls -->
+              <div class="pagination-controls mt-4">
+                <div class="pagination-info">
+                  Affichage de {{ pagination().currentPage * pagination().pageSize + 1 }} à
+                  {{ getPaginationEndIndex() }}
+                  sur {{ pagination().totalItems }} sociétés
+                </div>
+
+                <div class="pagination-actions">
+                  <div class="page-size-selector">
+                    <select [(ngModel)]="pagination().pageSize" (change)="changePageSize($any($event.target).value)" class="form-control">
+                      <option value="5">5 par page</option>
+                      <option value="10">10 par page</option>
+                      <option value="20">20 par page</option>
+                      <option value="50">50 par page</option>
+                    </select>
+                  </div>
+
+                  <div class="page-navigation">
+                    <button class="btn-secondary btn-sm" (click)="loadSocietiesPage(0)" [disabled]="pagination().currentPage === 0">
+                      &laquo; Première
+                    </button>
+                    <button class="btn-secondary btn-sm" (click)="loadSocietiesPage(pagination().currentPage - 1)" [disabled]="pagination().currentPage === 0">
+                      &lsaquo; Précédente
+                    </button>
+
+                    <span class="page-indicator">
+                      Page {{ pagination().currentPage + 1 }} sur {{ pagination().totalPages }}
+                    </span>
+
+                    <button class="btn-secondary btn-sm" (click)="loadSocietiesPage(pagination().currentPage + 1)" [disabled]="pagination().currentPage >= pagination().totalPages - 1">
+                      Suivante &rsaquo;
+                    </button>
+                    <button class="btn-secondary btn-sm" (click)="loadSocietiesPage(pagination().totalPages - 1)" [disabled]="pagination().currentPage >= pagination().totalPages - 1">
+                      Dernière &raquo;
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Attributions Management Tab -->
+    @if (activeTab() === 'attributions') {
+      <div class="api-section">
+        <h3>Gestion des Attributions</h3>
+
+        <!-- Attributions List -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Liste des Attributions ({{ attributions().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (attributions().length === 0) {
+              <p class="empty-state">Aucune attribution trouvée.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Utilisateur ID</th>
+                      <th>Rôle ID</th>
+                      <th>Société ID</th>
+                      <th>Établissement ID</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (attr of attributions(); track attr.id) {
+                      <tr>
+                        <td>{{ attr.id }}</td>
+                        <td>{{ attr.userId }}</td>
+                        <td>{{ attr.roleId }}</td>
+                        <td>{{ attr.societyId }}</td>
+                        <td>{{ attr.etablissementId }}</td>
+                        <td>{{ attr.isActive ? 'Active' : 'Inactive' }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Users Management Tab -->
+    @if (activeTab() === 'users') {
+      <div class="api-section">
+        <h3>Gestion des Utilisateurs</h3>
+
+        <!-- User Registration Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer un Nouveau Utilisateur</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="registerUser()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="userFirstname">Prénom</label>
+                  <input type="text" id="userFirstname" [(ngModel)]="newUser().firstname" name="firstname" required
+                         class="form-control" placeholder="Prénom">
+                </div>
+                <div class="form-group">
+                  <label for="userLastname">Nom</label>
+                  <input type="text" id="userLastname" [(ngModel)]="newUser().lastname" name="lastname" required
+                         class="form-control" placeholder="Nom">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="userEmail">Email</label>
+                  <input type="email" id="userEmail" [(ngModel)]="newUser().email" name="email" required
+                         class="form-control" placeholder="Email">
+                </div>
+                <div class="form-group">
+                  <label for="userPassword">Mot de passe</label>
+                  <input type="password" id="userPassword" [(ngModel)]="newUser().password" name="password" required
+                         class="form-control" placeholder="Mot de passe">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Utilisateur
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Change Password Form -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Changer le Mot de Passe</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="changeUserPassword()" class="api-form">
+              <div class="form-group">
+                <label for="currentPassword">Mot de passe actuel</label>
+                <input type="password" id="currentPassword" [(ngModel)]="changePassword().currentPassword" name="currentPassword" required
+                       class="form-control" placeholder="Mot de passe actuel">
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="newPassword">Nouveau mot de passe</label>
+                  <input type="password" id="newPassword" [(ngModel)]="changePassword().newPassword" name="newPassword" required
+                         class="form-control" placeholder="Nouveau mot de passe">
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">Confirmer le mot de passe</label>
+                  <input type="password" id="confirmPassword" [(ngModel)]="changePassword().confirmationPassword" name="confirmationPassword" required
+                         class="form-control" placeholder="Confirmer le mot de passe">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Changement...
+                } @else {
+                  Changer le Mot de Passe
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Users List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Utilisateurs ({{ users().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (users().length === 0) {
+              <p class="empty-state">Aucun utilisateur trouvé.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nom Complet</th>
+                      <th>Email</th>
+                      <th>Rôles</th>
+                      <th>Compte Verrouillé</th>
+                      <th>Actif</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (user of users(); track user.id) {
+                      <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.firstname }} {{ user.lastname }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.roles.join(', ') }}</td>
+                        <td>
+                          <span class="status-badge" [class.locked]="user.accountLocked" [class.unlocked]="!user.accountLocked">
+                            {{ user.accountLocked ? 'Verrouillé' : 'Déverrouillé' }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="status-badge" [class.active]="user.enabled" [class.inactive]="!user.enabled">
+                            {{ user.enabled ? 'Actif' : 'Inactif' }}
+                          </span>
+                        </td>
+                        <td>
+                          <button class="btn-secondary btn-sm" (click)="toggleUserLock(user.id, user.accountLocked)">
+                            {{ user.accountLocked ? 'Déverrouiller' : 'Verrouiller' }}
+                          </button>
+                          <button class="btn-secondary btn-sm" (click)="toggleUserStatus(user.id, user.enabled)">
+                            {{ user.enabled ? 'Désactiver' : 'Activer' }}
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

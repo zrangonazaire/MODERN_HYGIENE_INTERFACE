@@ -17,4 +17,28 @@ export class RoleService {
       .get<ApiResponse<{ roles: Role[] }>>(`${this.baseUrl}/roles`)
       .pipe(map((response) => response.data.roles));
   }
+
+  getRoleById(id: number): Observable<Role> {
+    return this.http
+      .get<ApiResponse<{ role: Role }>>(`${this.baseUrl}/roles/${id}`)
+      .pipe(map((response) => response.data.role));
+  }
+
+  createRole(role: Omit<Role, 'id'>): Observable<Role> {
+    return this.http
+      .post<ApiResponse<{ role: Role }>>(`${this.baseUrl}/roles/save`, role)
+      .pipe(map((response) => response.data.role));
+  }
+
+  updateRole(id: number, role: Partial<Role>): Observable<Role> {
+    return this.http
+      .put<ApiResponse<{ role: Role }>>(`${this.baseUrl}/roles/${id}`, role)
+      .pipe(map((response) => response.data.role));
+  }
+
+  deleteRole(id: number): Observable<void> {
+    return this.http
+      .delete<ApiResponse<{ role: Role }>>(`${this.baseUrl}/roles/${id}`)
+      .pipe(map(() => {}));
+  }
 }
