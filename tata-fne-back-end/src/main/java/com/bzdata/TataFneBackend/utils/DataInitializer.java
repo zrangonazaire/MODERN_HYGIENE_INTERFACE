@@ -1,10 +1,29 @@
 package com.bzdata.TataFneBackend.utils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.Set;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.bzdata.TataFneBackend.Funtionality.Functionality;
 import com.bzdata.TataFneBackend.Funtionality.FunctionalityRepository;
 import com.bzdata.TataFneBackend.attributionDroit.Attribution;
 import com.bzdata.TataFneBackend.attributionDroit.AttributionRepository;
-import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.*;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.Department;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.DepartmentRepository;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.Etablissement;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.EtablissementRepository;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.Societe;
+import com.bzdata.TataFneBackend.gestionSocieteEntrepriseService.SocieteRepository;
 import com.bzdata.TataFneBackend.role.Role;
 import com.bzdata.TataFneBackend.role.RoleRepository;
 import com.bzdata.TataFneBackend.rolefunctionality.RoleFunctionality;
@@ -12,15 +31,6 @@ import com.bzdata.TataFneBackend.rolefunctionality.RoleFunctionalityRepository;
 import com.bzdata.TataFneBackend.user.User;
 import com.bzdata.TataFneBackend.user.UserRepository;
 import com.github.javafaker.Faker;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 
 @Configuration
 @Transactional
@@ -266,9 +276,9 @@ public class DataInitializer {
 
             // 🔹 Création d’un administrateur
             User admin = User.builder()
-                    .firstname("Michel")
-                    .lastname("Bossoh")
-                    .email("bossohpaulin@gmail.com")
+                    .firstname("ZRANGO")
+                    .lastname("GONQUET ASTAIRE NAZAIRE")
+                    .email("astairenazaire@gmail.com")
                     .password(passwordEncoder.encode("admin123"))
                     .agence("AGENCE CENTRALE")
                     .dateOfBirth(LocalDate.of(1990, 1, 1))

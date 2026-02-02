@@ -69,6 +69,9 @@
       <button class="tab-button" [class.active]="activeTab() === 'attributions'" (click)="setActiveTab('attributions')">
         Attributions
       </button>
+      <button class="tab-button" [class.active]="activeTab() === 'role-functionalities'" (click)="setActiveTab('role-functionalities')">
+        Gestion des Permissions
+      </button>
       <button class="tab-button" [class.active]="activeTab() === 'users'" (click)="setActiveTab('users')">
         Gestion des Utilisateurs
       </button>
@@ -807,6 +810,138 @@
                         <td>{{ attr.societyId }}</td>
                         <td>{{ attr.etablissementId }}</td>
                         <td>{{ attr.isActive ? 'Active' : 'Inactive' }}</td>
+                        <td>
+                          <button class="btn-secondary btn-sm">Modifier</button>
+                          <button class="btn-danger btn-sm">Supprimer</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Role Functionality Management Tab -->
+    @if (activeTab() === 'role-functionalities') {
+      <div class="api-section">
+        <h3>Gestion des Permissions</h3>
+
+        <!-- Create Role Functionality Form -->
+        <div class="card">
+          <div class="card-header">
+            <h4>Créer une Nouvelle Permission</h4>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="createRoleFunctionality()" class="api-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="roleId">Rôle</label>
+                  <select id="roleId" [(ngModel)]="newRoleFunctionality().roleId" name="roleId" required
+                          class="form-control">
+                    <option value="" disabled>Sélectionnez un rôle</option>
+                    @for (role of roles(); track role.id) {
+                      <option [value]="role.id">{{ role.nom }} ({{ role.code }})</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="functionalityId">Fonctionnalité</label>
+                  <select id="functionalityId" [(ngModel)]="newRoleFunctionality().functionalityId" name="functionalityId" required
+                          class="form-control">
+                    <option value="" disabled>Sélectionnez une fonctionnalité</option>
+                    @for (func of functionalities(); track func.id) {
+                      <option [value]="func.id">{{ func.nom }} ({{ func.code }})</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="dateAffected">Date d'Effet</label>
+                <input type="date" id="dateAffected" [(ngModel)]="newRoleFunctionality().dateAffected" name="dateAffected"
+                       class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="permissions">Permissions</label>
+                <div class="permissions-grid">
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="lecture" [(ngModel)]="newRoleFunctionality().lecture" name="lecture">
+                    <label for="lecture">Lecture</label>
+                  </div>
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="writing" [(ngModel)]="newRoleFunctionality().writing" name="writing">
+                    <label for="writing">Écriture</label>
+                  </div>
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="modification" [(ngModel)]="newRoleFunctionality().modification" name="modification">
+                    <label for="modification">Modification</label>
+                  </div>
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="deletion" [(ngModel)]="newRoleFunctionality().deletion" name="deletion">
+                    <label for="deletion">Suppression</label>
+                  </div>
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="impression" [(ngModel)]="newRoleFunctionality().impression" name="impression">
+                    <label for="impression">Impression</label>
+                  </div>
+                  <div class="permission-checkbox">
+                    <input type="checkbox" id="validation" [(ngModel)]="newRoleFunctionality().validation" name="validation">
+                    <label for="validation">Validation</label>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" [disabled]="loading() || !newRoleFunctionality().roleId || !newRoleFunctionality().functionalityId">
+                @if (loading()) {
+                  <span class="spinner-small"></span> Création...
+                } @else {
+                  Créer Permission
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Role Functionalities List -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Liste des Permissions ({{ roleFunctionalities().length }})</h4>
+          </div>
+          <div class="card-body">
+            @if (roleFunctionalities().length === 0) {
+              <p class="empty-state">Aucune permission trouvée.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Rôle</th>
+                      <th>Fonctionnalité</th>
+                      <th>Date d'Effet</th>
+                      <th>Permissions</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (rf of roleFunctionalities(); track rf.id) {
+                      <tr>
+                        <td>{{ rf.id }}</td>
+                        <td>{{ getRoleName(rf.roleId) }}</td>
+                        <td>{{ getFunctionalityName(rf.functionalityId) }}</td>
+                        <td>{{ rf.dateAffected ? rf.dateAffected : 'N/A' }}</td>
+                        <td>
+                          <div class="permissions-list">
+                            @if (rf.lecture) { <span class="permission-badge">Lecture</span> }
+                            @if (rf.writing) { <span class="permission-badge">Écriture</span> }
+                            @if (rf.modification) { <span class="permission-badge">Modification</span> }
+                            @if (rf.deletion) { <span class="permission-badge">Suppression</span> }
+                            @if (rf.impression) { <span class="permission-badge">Impression</span> }
+                            @if (rf.validation) { <span class="permission-badge">Validation</span> }
+                          </div>
+                        </td>
                         <td>
                           <button class="btn-secondary btn-sm">Modifier</button>
                           <button class="btn-danger btn-sm">Supprimer</button>

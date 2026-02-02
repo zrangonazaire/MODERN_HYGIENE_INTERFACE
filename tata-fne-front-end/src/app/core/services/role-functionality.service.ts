@@ -7,12 +7,17 @@ import { ApiResponse } from '../models/api-response';
 
 export interface RoleFunctionality {
   id: number;
-  roleId: number;
-  functionalityId: number;
+  roleId?: number;
+  functionalityId?: number;
+  lecture: boolean;
+  writing: boolean;
+  modification: boolean;
+  deletion: boolean;
+  impression: boolean;
+  validation: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
-
 @Injectable({ providedIn: 'root' })
 export class RoleFunctionalityService {
   private readonly baseUrl = environment.apiBaseUrl;

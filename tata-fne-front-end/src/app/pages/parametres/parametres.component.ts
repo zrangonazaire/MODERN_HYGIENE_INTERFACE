@@ -57,6 +57,18 @@ export class ParametresComponent implements OnInit {
     code: ''
   });
 
+  newRoleFunctionality = signal({
+    roleId: undefined as number | undefined,
+    functionalityId: undefined as number | undefined,
+    lecture: false,
+    writing: false,
+    modification: false,
+    deletion: false,
+    impression: false,
+    validation: false,
+    dateAffected: ''
+  });
+
   newEtablissement = signal({
     codeEtablissement: '',
     nom: '',
@@ -285,6 +297,16 @@ export class ParametresComponent implements OnInit {
     return dept ? dept.nom : 'Département inconnu';
   }
 
+  getRoleName(roleId: number): string {
+    const role = this.roles().find(r => r.id === roleId);
+    return role ? role.nom : 'Rôle inconnu';
+  }
+
+  getFunctionalityName(functionalityId: number): string {
+    const func = this.functionalities().find(f => f.id === functionalityId);
+    return func ? func.nom : 'Fonctionnalité inconnue';
+  }
+
   isUserInDepartment(userId: number): boolean {
     return this.usersForDepartment().some(u => u.id === userId);
   }
@@ -377,6 +399,34 @@ export class ParametresComponent implements OnInit {
         });
       },
       error: (err) => this.handleError('Failed to register user')
+    }).add(() => this.loading.set(false));
+  }
+
+  // Role Functionality Management
+  createRoleFunctionality(): void {
+    if (!this.newRoleFunctionality().roleId || !this.newRoleFunctionality().functionalityId) {
+      this.handleError('Veuillez sélectionner un rôle et une fonctionnalité');
+      return;
+    }
+
+    this.loading.set(true);
+    this.roleFunctionalityService.createRoleFunctionality(this.newRoleFunctionality()).subscribe({
+      next: (roleFunctionality) => {
+        this.roleFunctionalities.update(rfs => [...rfs, roleFunctionality]);
+        this.newRoleFunctionality.set({
+          roleId: undefined,
+          functionalityId: undefined,
+          lecture: false,
+          writing: false,
+          modification: false,
+          deletion: false,
+          impression: false,
+          validation: false,
+          dateAffected: ''
+        });
+        this.showSuccess('Permission créée avec succès');
+      },
+      error: (err) => this.handleError('Échec de la création de la permission')
     }).add(() => this.loading.set(false));
   }
 

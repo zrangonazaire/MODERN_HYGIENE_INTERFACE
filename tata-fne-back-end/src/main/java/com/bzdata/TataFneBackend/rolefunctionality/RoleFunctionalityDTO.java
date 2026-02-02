@@ -1,6 +1,9 @@
 package com.bzdata.TataFneBackend.rolefunctionality;
 
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -19,4 +22,8 @@ public class RoleFunctionalityDTO {
     private boolean deletion;
     private boolean impression;
     private boolean validation;
+
+    private LocalDate dateAffected;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastModifiedDate;
 }
